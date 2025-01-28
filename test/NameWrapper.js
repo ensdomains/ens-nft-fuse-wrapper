@@ -494,6 +494,13 @@ describe('Name Wrapper', () => {
       // Make sure it didn't succeed
       expect(await NameWrapper.ownerOf(namehash('xyz'))).to.equal(account)
     })
+
+    it('Does not allow non-controllers to call wrap', async () => {
+      await EnsRegistry.setApprovalForAll(NameWrapper.address, true)
+      await expect(
+        NameWrapper2.wrap(encodeName('xyz'), account, 0, EMPTY_ADDRESS)
+      ).to.be.revertedWith('Controllable: Caller is not a controller')
+    })
   })
 
   describe('unwrap()', () => {
@@ -826,9 +833,7 @@ describe('Name Wrapper', () => {
         CANNOT_UNWRAP | CANNOT_REPLACE_SUBDOMAIN,
         EMPTY_ADDRESS
       )
-      let [fuses, vulnerability, nodeVulnerable] = await NameWrapper.getFuses(
-        namehash('wrapped2.eth')
-      )
+      let [fuses, vulnerability] = await NameWrapper.getFuses(nameHash)
       expect(fuses).to.equal(CANNOT_UNWRAP | CANNOT_REPLACE_SUBDOMAIN)
       expect(vulnerability).to.equal(ParentVulnerability.Safe)
 
@@ -1020,6 +1025,14 @@ describe('Name Wrapper', () => {
       await expect(
         NameWrapper.wrapETH2LD('', account, CAN_DO_EVERYTHING, ZERO_ADDRESS)
       ).to.be.revertedWith('NameWrapper: Label too short')
+    })
+
+    it('Does not allow non-controllers to call wrapETH2LD', async () => {
+      await BaseRegistrar.register(labelHash, account, 84600)
+      await BaseRegistrar.setApprovalForAll(NameWrapper.address, true)
+      await expect(
+        NameWrapper2.wrapETH2LD(label, account, 0, EMPTY_ADDRESS)
+      ).to.be.revertedWith('Controllable: Caller is not a controller')
     })
   })
 
@@ -2230,7 +2243,7 @@ describe('Name Wrapper', () => {
     it('Cannot be called if CANNOT_SET_TTL is burned', async () => {
       await NameWrapper.burnFuses(wrappedTokenId, CANNOT_SET_TTL)
 
-      await expect(NameWrapper.setTTL(wrappedTokenId, 100)).to.be.revertedWith(
+      await expect(NameWrapper.setTTL(wrappedTokenId, 100)).to be.revertedWith(
         'NameWrapper: Operation prohibited by fuses'
       )
     })

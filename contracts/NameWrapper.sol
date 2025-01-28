@@ -1,4 +1,3 @@
-//SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
 import "./ERC1155Fuse.sol";
@@ -159,7 +158,7 @@ contract NameWrapper is
         address wrappedOwner,
         uint96 _fuses,
         address resolver
-    ) public override {
+    ) public override onlyController {
         uint256 tokenId = uint256(keccak256(bytes(label)));
         address owner = registrar.ownerOf(tokenId);
 
@@ -230,7 +229,7 @@ contract NameWrapper is
         address wrappedOwner,
         uint96 _fuses,
         address resolver
-    ) public override {
+    ) public override onlyController {
         (bytes32 labelhash, uint offset) = name.readLabel(0);
         bytes32 parentNode = name.namehash(offset);
         bytes32 node = _makeNode(parentNode, labelhash);
